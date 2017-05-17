@@ -103,7 +103,6 @@ function reset() {
   // Remove everything from this game
   stage.removeAllChildren();
   snake = [];
-  stage.removeAllChildren();
 
   // New game
   createStart();
