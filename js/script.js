@@ -1,5 +1,5 @@
 // Global variables
-var stage, treat, points, width = 10, snake = [], dir;
+var stage, treat, points, width = 10, snake = [], dir, queue, loading, stop = false;
 
 // On load
 window.addEventListener('load', init);
@@ -20,32 +20,52 @@ function checkKey(e) {
 function init() {
   // Set Stage
   stage = new createjs.Stage('myCanvas');
-  createjs.Ticker.addEventListener('tick', onTick);
+  loading = new createjs.Text("Loading", "30px Helvetica", "#fff");
+  loading.textBaseline="middle";
+  loading.textAlign="center";
+  loading.x=stage.canvas.width/2;
+  loading.y=stage.canvas.height/2;
+  stage.addChild(loading);
 
-  // New Game
-  createStart();
+  // Preload
+  queue = new createjs.LoadQueue(true);
+  queue.installPlugin(createjs.Sound);
+  queue.on("progress", progress);
+  queue.on('complete', createStart);
+  queue.loadManifest([
+    { id: "treat", src: "sound/treat.mp3" },
+    { id: "dead", src: "sound/dead.mp3" }
+  ]);
+}
+
+function progress(e) {
+  var percent = Math.round(e.progress*100);
+  loading.text = "Loading: " + percent + "%";
+  stage.update()
 }
 
 function createStart() {
+  stage.removeChild(loading);
+  createjs.Ticker.addEventListener('tick', onTick);
   createjs.Ticker.setFPS(30);
 
   // Head of snake
-  var sqr = new createjs.Shape();
-  sqr.graphics.beginFill('#09f');
-  sqr.graphics.drawRect(0, 0, width, width);
+  var head = new createjs.Shape();
+  head.graphics.beginFill('#09f');
+  head.graphics.drawRect(0, 0, width, width);
   
   // To the top left corner
-  sqr.x = 0;
-  sqr.y = 0;
+  head.x = 0;
+  head.y = 0;
 
   // Initially start moving to the right
-  sqr.dir = 'right';
+  dir = 'right';
 
   // Give the snake a head
-  snake.push(sqr);
+  snake.push(head);
 
   // Show it on stage
-  stage.addChild(sqr);
+  stage.addChild(head);
 
   // Create the treat object
   treat = new createjs.Shape();
@@ -82,6 +102,7 @@ function onTick(e) {
   if (checkIntersection(snake[0], treat)) {
 
     // Grow
+    createjs.Sound.play("treat");
     addToSnake();
 
     // New Treat
@@ -98,6 +119,7 @@ function onTick(e) {
 
 function reset() {
   // Notify
+  createjs.Sound.play("dead");
   alert('You are dead!');
 
   // Remove everything from this game
@@ -135,7 +157,9 @@ function moveSnake() {
   snake.reverse().forEach((e, i) => {
     
     // Head moves to the global direction
-    if (i == snake.length - 1) e.dir = dir;
+    if (i == snake.length - 1) {
+      e.dir = dir;
+    }
 
     // The last piece of tail gets the moving direction of the second to last piece etc.
     else e.dir = snake[i + 1].dir;

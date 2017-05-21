@@ -1,0 +1,9 @@
+@import url('https://fonts.googleapis.com/css?family=Josefin+Sans');
+body {
+  font-family: 'Josefin Sans', sans-serif;
+}
+#myCanvas {
+  width: 30em;
+  height: 30em;
+  background-color: #444;
+}
